@@ -1,6 +1,6 @@
 <template>
   <BasicModal
-    title="重新调度"
+    title="创建"
     @register="registerModal"
     v-bind="$attrs"
     width="700px"
@@ -13,10 +13,10 @@
   import { BasicForm, useForm } from '/@/components/Form';
   import { defineComponent, ref } from 'vue';
   import { BasicModal, useModalInner } from '/@/components/Modal';
-  import { createSchemas } from './editSchemas';
+  import { createSchemas } from './createSchemas';
   import { useMessage } from '/@/hooks/web/useMessage';
-  import { rescheduleJob } from '/@/api/job/job'
-  import { ReScheduleJobData } from '/@/api/job/model/jobModel'
+  import { addJob } from '/@/api/job/job'
+  import { JobInfo } from '/@/api/job/model/jobModel'
 
   export default defineComponent({
     components: { BasicForm, BasicModal },
@@ -44,38 +44,40 @@
         },
       });
 
-      const [registerModal, { closeModal }] = useModalInner((data) => {
-        job.value = data.job;
-        setFieldsValue(data.job);
+      const [registerModal, { closeModal }] = useModalInner(() => {
+        setFieldsValue({});
       });
 
       async function customSubmitFunc() {
         try {
-          const jobInfo = await validate();
-          console.log(jobInfo);
+          const data = await validate();
+          console.log(data);
           setProps({
             submitButtonOptions: {
               loading: true,
             },
           });
-          const id = jobInfo.id;
-          const jobData: ReScheduleJobData = {
+          const jobInfo: JobInfo = {
+            func: data.func,
+            args: data.args?.split(','),
+            name: data.name,
             trigger: {
-              trigger: jobInfo.trigger,
-              run_time: jobInfo.run_time,
-              timezone: jobInfo.timezone,
-              jitter: jobInfo.jitter
+              trigger: data.trigger,
+              run_time: data.run_time,
+              timezone: data.timezone,
+              jitter: data.jitter
             },
-            jobstore: jobInfo.jobstore
+            executor: data.executor,
+            jobstore: data.jobstore,
+            max_instances: data.max_instances | 1
           }
-          delete jobInfo.id;
-          rescheduleJob(id, jobData).then((resp) => {
+          addJob(jobInfo).then((resp) => {
             setProps({
               submitButtonOptions: {
                 loading: false,
               },
             });
-            createMessage.success(`Job${resp.name}更新成功`);
+            createMessage.success(`Job${resp.name}创建成功`);
             closeModal();
           });
         } catch (error) {
@@ -84,7 +86,7 @@
               loading: true,
             },
           });
-          createMessage.warning('提交失败！');
+          createMessage.warning('创建失败！');
         }
       }
       return { registerModal, registerForm };

@@ -2,6 +2,8 @@
  * @description: Job 触发器类型
  */
 
+import { number } from "vue-types"
+
 export enum TriggerType {
   Date = 'date',
   Cron = 'cron',
@@ -33,7 +35,9 @@ export interface Job {
   // 最大并发数
   max_instances: number;
   // 下次运行时间
-  next_run_time: string
+  next_run_time: string;
+  // 存储器
+  jobstore: string;
 }
 
 
@@ -42,4 +46,49 @@ export interface QueryJobParams {
   name?: string;
   trigger?: TriggerType;
   func?: string
+}
+
+
+
+export interface Task {
+  name: string,
+  desc: string
+
+}
+
+export interface Store {
+  name: string
+}
+
+export interface Executor {
+  name: string
+}
+
+export interface ReScheduleJobData {
+    trigger: {
+      trigger: string,
+      run_time: string,
+      timezone: string,
+      jitter?: number
+    },
+    jobstore: string
+}
+
+export interface JobInfo {
+  func: string,
+  name: string,
+  trigger: {
+    trigger: string,
+    run_time: string,
+    timezone?: string,
+    jitter?:number
+  },
+  max_instances: number,
+  args: any[],
+  kwargs?: Recordable,
+  jobstore: string,
+  executor: string,
+  replace_existing?: false,
+  misfire_grace_time?: number,
+  coalesce?: true
 }

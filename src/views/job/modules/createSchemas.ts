@@ -1,14 +1,13 @@
 import { FormSchema } from '/@/components/Form';
 
-import { getJobStores } from '/@/api/job/job';
+import { getJobStores, getJobExcutors, getJobTasks } from '/@/api/job/job';
 
 export function createSchemas(): FormSchema[] {
   return [
     {
-      field: 'id',
+      field: 'name',
       component: 'Input',
-      label: 'JobID',
-      show: false,
+      label: '任务名',
       required: true,
     },
     {
@@ -56,6 +55,20 @@ export function createSchemas(): FormSchema[] {
       },
     },
     {
+      field: 'executor',
+      component: 'ApiSelect',
+      label: '执行器 ',
+      componentProps: {
+        api: getJobExcutors,
+        labelField: 'name',
+        // use id as value
+        valueField: 'name',
+
+        getPopupContainer: () => document.body,
+      },
+      required: true
+    },
+    {
       field: 'timezone',
       component: 'Input',
       label: '时区',
@@ -76,6 +89,39 @@ export function createSchemas(): FormSchema[] {
         precision: 0
       },
       required: false,
+    },
+    {
+      field: 'max_instances',
+      component: 'InputNumber',
+      label: '最大并发数',
+      componentProps: {
+        placeholder: '最大并发数',
+        style: {width: '100%'},
+        min: 1,
+        step:1,
+        precision: 0
+      },
+      required: true,
+    },
+    {
+      field: 'func',
+      component: 'ApiSelect',
+      label: '任务',
+      componentProps: {
+        api: getJobTasks,
+        labelField: 'name',
+        // use id as value
+        valueField: 'name',
+
+        getPopupContainer: () => document.body,
+      },
+      required: true
+    },
+    {
+      field: 'args',
+      component: 'Input',
+      label: '任务参数',
+      required: false
     },
   ];
 }

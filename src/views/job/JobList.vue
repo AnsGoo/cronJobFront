@@ -10,118 +10,38 @@
         <Icon icon="ant-design:pause-circle-twotone"  color="#EFBD47" @click="pauseMyJob(record.id)" v-if="record.next_run_time"/>
         <Icon icon="ant-design:reload-outlined"  color="#87d068" v-else @click="resumeMyJob(record.id)"/>
         <Icon icon="ant-design:delete-outlined"  color="#f50"  @click="removeMyJob(record.id)" />
-        <Icon icon="ant-design:edit-outlined"  color="#b7eb8f" @click="openModal" />
+        <Icon icon="ant-design:edit-outlined"  color="#b7eb8f" @click="reSheduler(record)" />
+      </template>
+
+      <template #toolbar>
+        <a-button type="primary" @click="create">
+          新建
+        </a-button>
       </template>
     </BasicTable>
-    <BasicModal v-bind="$attrs" title="重新调度Job"  @register="registerModal">
-      <ReSchedulerJob/>
-    </BasicModal>
+    <ReSchedulerJob @register="registerEdit"/>
+    <CreateJob @register="registerCreate" />
+
   </div>
 </template>
 <script lang="ts">
   import { defineComponent } from 'vue';
-  import { FormProps, FormSchema } from '/@/components/Table';
   import { useMessage } from '/@/hooks/web/useMessage';
   import { BasicModal, useModal } from '/@/components/Modal';
   import Tag from 'ant-design-vue/lib/tag';
   import { Icon} from '/@/components/Icon/index';
   import { BasicTable, useTable } from '/@/components/Table';
-  import { BasicColumn } from '/@/components/Table/src/types/table';
   import { getJobs, resumeJob, pauseJob, removeJob} from '/@/api/job/job';
+  import {getBasicColumns, getFormConfig} from './config'
 
   import ReSchedulerJob from './modules/Edit.vue'
+  import CreateJob from './modules/Create.vue'
 
-
-  function getBasicColumns(): BasicColumn[] {
-    return [
-      {
-        title: 'ID',
-        dataIndex: 'id',
-        fixed: 'left',
-        width: 200,
-      },
-      {
-        title: '名称',
-        dataIndex: 'name',
-        width: 150
-      },
-      {
-        title: '任务',
-        dataIndex: 'func',
-        customRender: ({ text }: { text: any }) => text.split('.').slice(-1)
-      },
-      {
-        title: '运行时间',
-        dataIndex: 'run_time',
-        width: 150
-      },
-      {
-        title: '触发器类型',
-        dataIndex: 'trigger',
-        filters: [
-          { text: 'date', value: 'date' },
-          { text: 'cron', value: 'cron' },
-          { text: 'interval', value: 'interval' },
-        ],
-        filterMultiple: false
-      },
-      {
-        title: '状态',
-        dataIndex: 'state',
-        filters: [
-          { text: 'STOP', value: 'STOP' },
-          { text: 'RUNNING', value: 'RUNNING' }
-        ],
-        filterMultiple: false,
-        slots: { customRender: 'state' },
-      },
-      {
-        title: '操作',
-        dataIndex: 'action',
-        slots: { customRender: 'action' },
-      }
-    ];
-  }
-
-  function getFormConfig(): Partial<FormProps> {
-    // const fields: string[] = ['id', 'func', 'name']
-    const schemas: FormSchema[] = [
-      {
-        field: 'id',
-        label: 'ID',
-        component: 'Input',
-        colProps: {
-            xl: 8,
-            xxl: 8
-          }
-      },
-      {
-        field: 'name',
-        label: '名称',
-        component: 'Input',
-        colProps: {
-            xl: 8,
-            xxl: 8
-          }
-      },
-      {
-        field: 'func',
-        label: '任务',
-        component: 'Input',
-        colProps: {
-            xl: 8,
-            xxl: 8
-          }
-      },
-    ]
-    return {
-      labelWidth: 100, schemas
-    };
-  }
   export default defineComponent({
-    components: { BasicTable, Tag, Icon, BasicModal, ReSchedulerJob },
+    components: { BasicTable, Tag, Icon, BasicModal, ReSchedulerJob, CreateJob },
     setup() {
-      const [registerModal, { openModal }] = useModal();
+      const [registerEdit, { openModal: openEditModal }] = useModal();
+      const [registerCreate, { openModal: openCreateModal }] = useModal();
       const [registerTable, { reload }] = useTable({
         rowKey: 'id',
         title: 'Job管理',
@@ -168,14 +88,26 @@
       function removeMyJob(job_id:string) {
         handleConfirm('warning','确定要移除这个Job吗？', removeJob, job_id)
       }
+      function reSheduler(job: Job) {
+        openEditModal(true, {
+          job: job,
+        });
+      }
+
+      function create() {
+        openCreateModal(true, {});
+      }
+
       return {
         registerTable,
         handleReload,
         resumeMyJob,
         pauseMyJob,
         removeMyJob,
-        registerModal,
-        openModal
+        reSheduler,
+        registerEdit,
+        registerCreate,
+        create
       };
     }
   });
